@@ -9,14 +9,10 @@ Jieba NewJieba(const char* dict_path, const char* hmm_path, const char* user_dic
 void FreeJieba(Jieba);
 int InsertUserWord(Jieba handle, const char* word);
 
-typedef struct {
-  char* word;
-} CJiebaWord;
-CJiebaWord** Cut(Jieba handle, const char* sentence, size_t len, int hmm);
-CJiebaWord** CutAll(Jieba handle, const char* sentence, size_t len);
-CJiebaWord** CutForSearch(Jieba handle, const char* sentence, size_t len, int hmm);
-void FreeWords(CJiebaWord** words);
-char* GetWordAsStr(CJiebaWord* words);
+char** Cut(Jieba handle, const char* sentence, size_t len, int hmm);
+char** CutAll(Jieba handle, const char* sentence, size_t len);
+char** CutForSearch(Jieba handle, const char* sentence, size_t len, int hmm);
+void FreeWords(char** words);
 
 typedef struct {
   char* word;
@@ -33,7 +29,7 @@ Extractor NewExtractor(const char* dict_path,
       const char* idf_path,
       const char* stop_word_path,
       const char* user_dict_path);
-CJiebaWord** Extract(Extractor handle, const char* sentence, size_t len, size_t topn);
+char** Extract(Extractor handle, const char* sentence, size_t len, size_t topn);
 void FreeExtractor(Extractor handle);
 
 #ifdef __cplusplus

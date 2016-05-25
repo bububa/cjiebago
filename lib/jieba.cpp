@@ -9,16 +9,14 @@ using namespace std;
 
 extern "C" {
 
-CJiebaWord** getWords(const char* sentence, vector<string> words, size_t len) {
-  CJiebaWord** result = (CJiebaWord**)malloc(sizeof(CJiebaWord*) * (words.size() + 1));
+char** getWords(const char* sentence, vector<string> words, size_t len) {
+  char** result = (char**)malloc(sizeof(char*) * (words.size() + 1));
 
   for (size_t i = 0; i < words.size(); i++) {
-    CJiebaWord* words_i = (CJiebaWord*)malloc(sizeof(CJiebaWord));
-    words_i->word = (char*)malloc(words[i].size() + 1);
-    memset(words_i->word, 0, words[i].size() + 1);
-    strcpy(words_i->word, words[i].c_str());
-
-    *(result + i) = words_i;
+    char* word = (char*)malloc(words[i].size() + 1);
+    memset(word, 0, words[i].size() + 1);
+    strcpy(word, words[i].c_str());
+    *(result + i) = word;
   }
   *(result + words.size()) =  NULL;
   return result;
@@ -34,7 +32,7 @@ void FreeJieba(Jieba handle) {
   delete x;
 }
 
-CJiebaWord** Cut(Jieba handle, const char* sentence, size_t len, int hmm) {
+char** Cut(Jieba handle, const char* sentence, size_t len, int hmm) {
   cppjieba::Jieba* x = (cppjieba::Jieba*)handle;
   vector<string> words;
   string s(sentence, len);
@@ -46,7 +44,7 @@ CJiebaWord** Cut(Jieba handle, const char* sentence, size_t len, int hmm) {
   return getWords(sentence, words, len);
 }
 
-CJiebaWord** CutAll(Jieba handle, const char* sentence, size_t len) {
+char** CutAll(Jieba handle, const char* sentence, size_t len) {
   cppjieba::Jieba* x = (cppjieba::Jieba*)handle;
   vector<string> words;
   string s(sentence, len);
@@ -55,7 +53,7 @@ CJiebaWord** CutAll(Jieba handle, const char* sentence, size_t len) {
   return getWords(sentence, words, len);
 }
 
-CJiebaWord** CutForSearch(Jieba handle, const char* sentence, size_t len, int hmm) {
+char** CutForSearch(Jieba handle, const char* sentence, size_t len, int hmm) {
   cppjieba::Jieba* x = (cppjieba::Jieba*)handle;
   vector<string> words;
   string s(sentence, len);
@@ -68,12 +66,9 @@ CJiebaWord** CutForSearch(Jieba handle, const char* sentence, size_t len, int hm
   return getWords(sentence, words, len);
 }
 
-void FreeWords(CJiebaWord** words) {
-  CJiebaWord** p = words;
+void FreeWords(char** words) {
+  char** p = words;
   while(p != NULL && *p != NULL) {
-    if ((*p)->word != NULL) {
-      free((*p)->word);
-    }
     free(*p);
     p++;
   }
@@ -108,15 +103,6 @@ int InsertUserWord(Jieba handle, const char* word)
 {
     cppjieba::Jieba* x = (cppjieba::Jieba*)handle;
     return x->InsertUserWord(string(word), "u") ? 1 : 0;
-}
-
-char* GetWordAsStr(CJiebaWord* words)
-{
-    if (words == NULL) {
-      return NULL;
-    }
-
-    return words->word;
 }
 
 CJiebaTag** Tag(Jieba handle, const char* sentence, size_t len) {
@@ -183,18 +169,16 @@ void FreeExtractor(Extractor handle) {
   delete x;
 }
 
-CJiebaWord** Extract(Extractor handle, const char* sentence, size_t len, size_t topn) {
+char** Extract(Extractor handle, const char* sentence, size_t len, size_t topn) {
   cppjieba::KeywordExtractor* x = (cppjieba::KeywordExtractor*)handle;
   vector<cppjieba::KeywordExtractor::Word> words;
   x->Extract(sentence, words, topn);
-
-  CJiebaWord** result = (CJiebaWord**)malloc(sizeof(CJiebaWord*) * (words.size() + 1));
+  char** result = (char**)malloc(sizeof(char*) * (words.size() + 1));
   for (size_t i = 0; i < words.size(); i++) {
-    CJiebaWord* words_i = (CJiebaWord*)malloc(sizeof(CJiebaWord));
-    words_i->word = (char*)malloc(words[i].word.size() + 1);
-    strcpy(words_i->word, words[i].word.c_str());
+    char* word = (char*)malloc(words[i].word.size() + 1);
+    strcpy(word, words[i].word.c_str());
 
-    *(result + i) = words_i;
+    *(result + i) = word;
   }
   *(result + words.size()) =  NULL;
   return result;

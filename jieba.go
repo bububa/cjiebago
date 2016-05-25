@@ -1,6 +1,6 @@
 package cjiebago
 
-// #cgo LDFLAGS: -L /usr/local/lib/ -L . -ljieba -lstdc++
+// #cgo LDFLAGS: -L /usr/local/lib/ -ljieba -lstdc++
 // #cgo CFLAGS: -I ./lib/
 // #include <stdlib.h>
 // #include "jieba.h"
@@ -10,8 +10,6 @@ import "unsafe"
 type Jieba struct {
 	pointer C.Jieba
 }
-
-type CJiebaWord C.struct_CJiebaWord
 
 func NewJieba(dict string, hmm string, userDict string) *Jieba {
 	dictC := C.CString(dict)
@@ -40,13 +38,13 @@ func (this *Jieba) Cut(sentence string, hmm bool) []string {
 	sentenceC := C.CString(sentence)
 	defer C.free(unsafe.Pointer(sentenceC))
 
-	var jiebaWordsC **CJiebaWord
-	defer C.FreeWords((**C.struct___0)(unsafe.Pointer(jiebaWordsC)))
+	var jiebaWordsC **C.char
+	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
 	if hmm {
-		jiebaWordsC = (**CJiebaWord)(unsafe.Pointer(C.Cut(this.pointer, sentenceC, sizeC, 1)))
+		jiebaWordsC = (**C.char)(unsafe.Pointer(C.Cut(this.pointer, sentenceC, sizeC, 1)))
 	} else {
-		jiebaWordsC = (**CJiebaWord)(unsafe.Pointer(C.Cut(this.pointer, sentenceC, sizeC, 0)))
+		jiebaWordsC = (**C.char)(unsafe.Pointer(C.Cut(this.pointer, sentenceC, sizeC, 0)))
 	}
 
 	return this.convert_jieba_words(jiebaWordsC)
@@ -61,8 +59,8 @@ func (this *Jieba) CutAll(sentence string) []string {
 	sentenceC := C.CString(sentence)
 	defer C.free(unsafe.Pointer(sentenceC))
 
-	jiebaWordsC := (**CJiebaWord)(unsafe.Pointer(C.CutAll(this.pointer, sentenceC, sizeC)))
-	defer C.FreeWords((**C.struct___0)(unsafe.Pointer(jiebaWordsC)))
+	jiebaWordsC := (**C.char)(unsafe.Pointer(C.CutAll(this.pointer, sentenceC, sizeC)))
+	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
 	return this.convert_jieba_words(jiebaWordsC)
 }
@@ -76,31 +74,29 @@ func (this *Jieba) CutForSearch(sentence string, hmm bool) []string {
 	sentenceC := C.CString(sentence)
 	defer C.free(unsafe.Pointer(sentenceC))
 
-	var jiebaWordsC **CJiebaWord
-	defer C.FreeWords((**C.struct___0)(unsafe.Pointer(jiebaWordsC)))
+	var jiebaWordsC **C.char
+	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
 	if hmm {
-		jiebaWordsC = (**CJiebaWord)(unsafe.Pointer(C.CutForSearch(this.pointer, sentenceC, sizeC, 1)))
+		jiebaWordsC = (**C.char)(unsafe.Pointer(C.CutForSearch(this.pointer, sentenceC, sizeC, 1)))
 	} else {
-		jiebaWordsC = (**CJiebaWord)(unsafe.Pointer(C.CutForSearch(this.pointer, sentenceC, sizeC, 0)))
+		jiebaWordsC = (**C.char)(unsafe.Pointer(C.CutForSearch(this.pointer, sentenceC, sizeC, 0)))
 	}
 
 	return this.convert_jieba_words(jiebaWordsC)
 }
 
-func (this *Jieba) convert_jieba_words(jiebaWordsC **CJiebaWord) (words_list []string) {
+func (this *Jieba) convert_jieba_words(jiebaWordsC **C.char) (words_list []string) {
 	p := jiebaWordsC
+	var b *C.char
+	ptrSize := unsafe.Sizeof(b)
 	for {
 		if *p == nil {
 			break
 		}
-		words := C.GetWordAsStr((*C.struct___0)(unsafe.Pointer(*p)))
-		if words == nil {
-			break
-		}
-		words_list = append(words_list, C.GoString(words))
+		words_list = append(words_list, C.GoString((*C.char)(*p)))
 
-		p = (**CJiebaWord)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + uintptr(unsafe.Sizeof(*jiebaWordsC))))
+		p = (**C.char)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + uintptr(ptrSize)))
 	}
 
 	return
