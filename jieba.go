@@ -11,6 +11,10 @@ type Jieba struct {
 	pointer C.Jieba
 }
 
+type Extractor struct {
+    pointer C.Extractor
+}
+
 func NewJieba(dict string, hmm string, userDict string) *Jieba {
 	dictC := C.CString(dict)
 	hmmC := C.CString(hmm)
@@ -47,7 +51,7 @@ func (this *Jieba) Cut(sentence string, hmm bool) []string {
 		jiebaWordsC = (**C.char)(unsafe.Pointer(C.Cut(this.pointer, sentenceC, sizeC, 0)))
 	}
 
-	return this.convert_jieba_words(jiebaWordsC)
+	return getWords(jiebaWordsC)
 }
 
 func (this *Jieba) CutAll(sentence string) []string {
@@ -62,7 +66,7 @@ func (this *Jieba) CutAll(sentence string) []string {
 	jiebaWordsC := (**C.char)(unsafe.Pointer(C.CutAll(this.pointer, sentenceC, sizeC)))
 	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
-	return this.convert_jieba_words(jiebaWordsC)
+	return getWords(jiebaWordsC)
 }
 
 func (this *Jieba) CutForSearch(sentence string, hmm bool) []string {
@@ -83,10 +87,50 @@ func (this *Jieba) CutForSearch(sentence string, hmm bool) []string {
 		jiebaWordsC = (**C.char)(unsafe.Pointer(C.CutForSearch(this.pointer, sentenceC, sizeC, 0)))
 	}
 
-	return this.convert_jieba_words(jiebaWordsC)
+	return getWords(jiebaWordsC)
 }
 
-func (this *Jieba) convert_jieba_words(jiebaWordsC **C.char) (words_list []string) {
+func NewExtractor(dict string, hmm string, idf string, stopWords string, userDict string) *Extractor {
+	dictC := C.CString(dict)
+	hmmC := C.CString(hmm)
+	idfC := C.CString(idf)
+	stopWordsC := C.CString(stopWords)
+	userDictC := C.CString(userDict)
+	defer func() {
+		C.free(unsafe.Pointer(dictC))
+		C.free(unsafe.Pointer(hmmC))
+		C.free(unsafe.Pointer(idfC))
+		C.free(unsafe.Pointer(stopWordsC))
+		C.free(unsafe.Pointer(userDictC))
+	}()
+
+	ret := C.NewExtractor(dictC, hmmC, idfC, stopWordsC, userDictC)
+	return &Extractor{ret}
+}
+
+func (this *Extractor) Close() {
+	C.FreeExtractor(this.pointer)
+}
+
+func (this *Extractor) Extract(sentence string, topn uint) []string {
+    if len(sentence) == 0 {
+		return []string{}
+	}
+
+	sizeC := C.size_t(len([]byte(sentence)))
+	topnC := C.size_t(topn)
+	sentenceC := C.CString(sentence)
+	defer C.free(unsafe.Pointer(sentenceC))
+
+	var jiebaWordsC **C.char
+	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
+
+	jiebaWordsC = (**C.char)(unsafe.Pointer(C.Extract(this.pointer, sentenceC, sizeC, topnC)))
+
+	return getWords(jiebaWordsC)
+}
+
+func getWords(jiebaWordsC **C.char) (words_list []string) {
 	p := jiebaWordsC
 	var b *C.char
 	ptrSize := unsafe.Sizeof(b)

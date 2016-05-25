@@ -14,6 +14,8 @@ var (
 	GOPATH = os.Getenv("GOPATH")
 	DICT = path.Join(GOPATH, "src/github.com/bububa/cjiebago/dict/jieba.dict.utf8")
 	HMM_MODEL = path.Join(GOPATH, "src/github.com/bububa/cjiebago/dict/hmm_model.utf8")
+	IDF = path.Join(GOPATH, "src/github.com/bububa/cjiebago/dict/idf.utf8")
+	STOPWORDS = path.Join(GOPATH, "src/github.com/bububa/cjiebago/dict/stop_words.utf8")
 )
 
 func TestCut(t *testing.T) {
@@ -106,6 +108,34 @@ func TestCutForSearch(t *testing.T) {
 		got := jieba.CutForSearch(tt.sentence, tt.hmm)
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("%q. CutForSearch() = %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestExtract(t *testing.T) {
+	tests := []struct {
+		// Test description.
+		name string
+		// Parameters.
+		sentence string
+		topn uint
+		// Expected results.
+		want    []string
+		wantErr bool
+	}{
+		{
+			name:     "Extract test",
+			sentence: "小明硕士毕业于中国科学院计算所，后在日本京都大学深造",
+			topn: 10,
+			want:     []string{"日本京都大学", "计算所", "小明", "深造", "硕士", "中国科学院", "毕业"},
+		},
+	}
+	jieba := NewExtractor(DICT, HMM_MODEL, IDF, STOPWORDS, "")
+	defer jieba.Close()
+	for _, tt := range tests {
+		got := jieba.Extract(tt.sentence, tt.topn)
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("%q. Extract() = %v, want %v", tt.name, got, tt.want)
 		}
 	}
 }
