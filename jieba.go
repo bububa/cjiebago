@@ -43,7 +43,8 @@ func (this *Jieba) Cut(sentence string, hmm bool) []string {
 	defer C.free(unsafe.Pointer(sentenceC))
 
 	var jiebaWordsC **C.char
-	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
+	defer freeWords(jiebaWordsC)
+	//defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
 	if hmm {
 		jiebaWordsC = (**C.char)(unsafe.Pointer(C.Cut(this.pointer, sentenceC, sizeC, 1)))
@@ -64,8 +65,8 @@ func (this *Jieba) CutAll(sentence string) []string {
 	defer C.free(unsafe.Pointer(sentenceC))
 
 	jiebaWordsC := (**C.char)(unsafe.Pointer(C.CutAll(this.pointer, sentenceC, sizeC)))
-	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
-
+	defer freeWords(jiebaWordsC)
+	//defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 	return getWords(jiebaWordsC)
 }
 
@@ -79,7 +80,8 @@ func (this *Jieba) CutForSearch(sentence string, hmm bool) []string {
 	defer C.free(unsafe.Pointer(sentenceC))
 
 	var jiebaWordsC **C.char
-	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
+	defer freeWords(jiebaWordsC)
+	//defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
 	if hmm {
 		jiebaWordsC = (**C.char)(unsafe.Pointer(C.CutForSearch(this.pointer, sentenceC, sizeC, 1)))
@@ -123,7 +125,8 @@ func (this *Extractor) Extract(sentence string, topn uint) []string {
 	defer C.free(unsafe.Pointer(sentenceC))
 
 	var jiebaWordsC **C.char
-	defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
+	defer freeWords(jiebaWordsC)
+	//defer C.FreeWords((**C.char)(unsafe.Pointer(jiebaWordsC)))
 
 	jiebaWordsC = (**C.char)(unsafe.Pointer(C.Extract(this.pointer, sentenceC, sizeC, topnC)))
 
@@ -132,8 +135,7 @@ func (this *Extractor) Extract(sentence string, topn uint) []string {
 
 func getWords(jiebaWordsC **C.char) (words_list []string) {
 	p := jiebaWordsC
-	var b *C.char
-	ptrSize := unsafe.Sizeof(b)
+	ptrSize := unsafe.Sizeof(*p)
 	for {
 		if *p == nil {
 			break
@@ -144,4 +146,20 @@ func getWords(jiebaWordsC **C.char) (words_list []string) {
 	}
 
 	return
+}
+
+func freeWords(jiebaWordsC **C.char) {
+    if jiebaWordsC == nil {
+        return
+    }
+    p := jiebaWordsC
+    ptrSize := unsafe.Sizeof(*p)
+    for {
+        if *p == nil {
+            break
+        }
+        C.free(unsafe.Pointer(*p))
+        p = (**C.char)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + uintptr(ptrSize)))
+    }
+    C.free(unsafe.Pointer(jiebaWordsC))
 }
