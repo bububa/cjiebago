@@ -41,7 +41,10 @@ char** Cut(Jieba handle, const char* sentence, size_t len, int hmm) {
   }else{
     x->Cut(s, words, false);
   }
-  return getWords(sentence, words, len);
+  char** ret = getWords(sentence, words, len);
+  words.clear();
+  vector<string>().swap(words);
+  return ret;
 }
 
 char** CutAll(Jieba handle, const char* sentence, size_t len) {
@@ -49,8 +52,10 @@ char** CutAll(Jieba handle, const char* sentence, size_t len) {
   vector<string> words;
   string s(sentence, len);
   x->CutAll(s, words);
-
-  return getWords(sentence, words, len);
+  char** ret = getWords(sentence, words, len);
+  words.clear();
+  vector<string>().swap(words);
+  return ret;
 }
 
 char** CutForSearch(Jieba handle, const char* sentence, size_t len, int hmm) {
@@ -62,8 +67,10 @@ char** CutForSearch(Jieba handle, const char* sentence, size_t len, int hmm) {
   }else{
     x->CutForSearch(s, words, false);
   }
-
-  return getWords(sentence, words, len);
+  char** ret = getWords(sentence, words, len);
+  words.clear();
+  vector<string>().swap(words);
+  return ret;
 }
 
 void FreeWords(char** words) {
