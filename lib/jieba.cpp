@@ -188,6 +188,8 @@ char** Extract(Extractor handle, const char* sentence, size_t len, size_t topn) 
     *(result + i) = word;
   }
   *(result + words.size()) =  NULL;
+  words.clear();
+  vector<cppjieba::KeywordExtractor::Word>().swap(words);
   return result;
 }
 
