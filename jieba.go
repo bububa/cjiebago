@@ -1,6 +1,6 @@
 package cjiebago
 
-// #cgo LDFLAGS: -L${SRCDIR}/lib -ljieba -lstdc++
+// #cgo LDFLAGS: -L${SRCDIR}/lib -ljieba -lstdc++ -lm
 // #cgo CFLAGS: -I ./lib/
 // #include <stdlib.h>
 // #include "jieba.h"
